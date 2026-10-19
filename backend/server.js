@@ -5,16 +5,21 @@ import express from "express"
 import pool from "./db.js"
 import bcrypt from "bcrypt"
 import jwt from "jsonwebtoken"
+import cors from "cors"
 
 const app = express()
 
 const PORT = process.env.PORT || 3000
 
+app.use(cors({
+  origin: "http://localhost:5173"
+}))
+
 app.use(express.json())
 
 app.post("/register", async (req, res) => {
     try {
-        const {name, email, password, role} = req.body
+        const {name, email, password} = req.body
 
         if (!name || !email || !password) {
             return res.status(400).json({
@@ -37,13 +42,12 @@ app.post("/register", async (req, res) => {
 
         const result = await pool.query(
             `insert into users (name, email, password, role)
-            values ($1, $2, $3, $4)
+            values ($1, $2, $3, 'user')
             returning id, name, email, role`,
             [
                 name,
                 email,
-                hashedPassword,
-                role || "user"
+                hashedPassword
             ]
         )
 
@@ -128,7 +132,7 @@ app.get("/",(req, res) => {
     res.send("Teacher API is running")
 })
 
-app.get("/teachers", async (req,res) => {
+app.get("/teachers", authenticate, async (req,res) => {
     try {
         const result = await pool.query(
             "select * from teachers order by id"
@@ -147,7 +151,7 @@ app.get("/teachers", async (req,res) => {
 app.get("/teachers/:id", async (req,res) => {
     try {
         const teacherId = Number(req.params.id)
-        
+
         const result = await pool.query(
             "select * from teachers where id = $1",
             [teacherId]
@@ -169,13 +173,22 @@ app.get("/teachers/:id", async (req,res) => {
     }
 })
 
-app.post("/teachers", async (req, res) => {
+app.post("/teachers",
+    authenticate,
+    requireRole("manager", "admin"),
+    async (req, res) => {
     try {
         const {name, score} = req.body
 
-        if (!name || score === undefined) {
+        if (!name || !name.trim()) {
             return res.status(400).json({
-                message: "Name and score are required"
+                message: "Teacher name is required"
+            })
+        }
+
+        if (score === undefined || score === null) {
+            return res.status(400).json({
+                message: "Score is required"
             })
         }
 
@@ -201,11 +214,14 @@ app.post("/teachers", async (req, res) => {
 
       res.status(500).json({
         message: "Failed to create teacher"
-      }) 
+      })
     }
 })
 
-app.patch("/teachers/:id", async (req,res) => {
+app.patch("/teachers/:id",
+    authenticate,
+    requireRole("manager", "admin"),
+    async (req,res) => {
     try {
         const teacherId = Number(req.params.id)
         const {name,score} = req.body
@@ -248,7 +264,10 @@ app.patch("/teachers/:id", async (req,res) => {
     }
 })
 
-app.delete("/teachers/:id", async (req,res) => {
+app.delete("/teachers/:id",
+    authenticate,
+    requireRole("admin"),
+    async (req,res) => {
     try {
         const teacherId = Number(req.params.id)
 
