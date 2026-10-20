@@ -9,6 +9,10 @@ import UpdateTeacherForm from "./components/UpdateTeacherForm"
 import DeleteTeacherForm from "./components/DeleteTeacherForm"
 
 function App() {
+  const API_URL = import.meta.env.VITE_API_URL
+
+  console.log("API_URL:", API_URL)
+
   const [name, setName] = useState("")
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
@@ -70,7 +74,7 @@ function App() {
     event.preventDefault()
 
     const response = await fetch(
-      "http://localhost:3000/register",
+      `${API_URL}/register`,
       {
         method: "POST",
         headers: {
@@ -104,7 +108,7 @@ function App() {
     event.preventDefault()
 
     const response = await fetch(
-      "http://localhost:3000/login",
+      `${API_URL}/login`,
       {
         method: "POST",
         headers: {
@@ -166,7 +170,7 @@ function App() {
 
     try {
       const response = await fetch(
-        "http://localhost:3000/teachers",
+        `${API_URL}/teachers`,
         {
           method: "POST",
           headers: {
@@ -209,7 +213,7 @@ function App() {
 
     try {
       const response = await fetch(
-        "http://localhost:3000/teachers",
+        `${API_URL}/teachers`,
         {
           headers: {
             Authorization: `Bearer ${accessToken}`
@@ -245,7 +249,7 @@ function App() {
 
     try {
       const response = await fetch(
-        `http://localhost:3000/teachers/${updateId}`,
+        `${API_URL}/teachers/${updateId}`,
         {
           method: "PATCH",
           headers: {
@@ -286,7 +290,7 @@ function App() {
 
     try {
       const response = await fetch(
-        `http://localhost:3000/teachers/${deleteId}`,
+        `${API_URL}/teachers/${deleteId}`,
         {
           method: "DELETE",
           headers: {
