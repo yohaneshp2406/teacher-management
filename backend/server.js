@@ -11,9 +11,17 @@ const app = express()
 
 const PORT = process.env.PORT || 3000
 
+
+const allowedOrigins = [
+  "http://localhost:5173",
+  "http://localhost:4173",
+  "https://teacher-management-one-neon.vercel.app"
+]
+
 app.use(cors({
-  origin: "http://localhost:5173"
+  origin: allowedOrigins
 }))
+
 
 app.use(express.json())
 
@@ -148,7 +156,7 @@ app.get("/teachers", authenticate, async (req,res) => {
     }
 })
 
-app.get("/teachers/:id", async (req,res) => {
+app.get("/teachers/:id", authenticate, async (req, res) => {
     try {
         const teacherId = Number(req.params.id)
 
@@ -306,10 +314,6 @@ app.get("/db-test", async(req,res) => {
     })
 })
 
-app.listen(PORT, () => {
-    console.log(`Server running on port ${PORT}`)
-})
-
 function authenticate(req, res, next) {
     const authHeader = req.headers.authorization
 
@@ -366,4 +370,8 @@ app.get("/admin", authenticate, requireRole("admin"), (req,res) => {
     res.json({
         message: "Admin area"
     })
+})
+
+app.listen(PORT, "0.0.0.0", () => {
+  console.log(`Server running on port ${PORT}`)
 })
